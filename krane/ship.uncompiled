@@ -1,0 +1,8 @@
+go run krane.go flags.go run \
+                                --volume=/var/run:/var/run:rw \
+                                --volume=/sys:/sys:ro \
+                                --volume=/var/lib/docker/:/var/lib/docker:ro \
+				--ship=192.168.59.103 \
+                                --publish=8080:8080 \
+                                --detach=true \
+                                google/cadvisor:latest

@@ -1,0 +1,1 @@
+krane run --ship ship01.concerto.io --name mysql -e MYSQL_ROOT_PASSWORD=mysql -d mysql

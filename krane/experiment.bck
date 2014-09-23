@@ -1,0 +1,77 @@
+package main
+
+import (
+	"code.google.com/p/go.crypto/ssh"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net"
+	"os"
+)
+
+func getPrivateKeys() ssh.Signer {
+	privateBytes, err := ioutil.ReadFile(os.Getenv("HOME") + "/.ssh/id_rsa")
+	fmt.Printf("%s/.ssh/id_rsa\n", os.Getenv("HOME"))
+	if err != nil {
+		panic("Failed to load private key")
+	}
+	private, err := ssh.ParsePrivateKey(privateBytes)
+	if err != nil {
+		panic("Failed to parse private key")
+	}
+	fmt.Printf("%#v\n", private)
+	return private
+}
+
+func ioProxy(conn1 net.Conn, conn2 net.Conn) {
+	go io.Copy(conn1, conn2)
+	go io.Copy(conn2, conn1)
+}
+
+func portMapping(remoteHost string, localPort int, remotePort int) {
+	// Setup localListener (type net.Listener)
+	localListener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", localPort))
+	if err != nil {
+		log.Fatalf("net.Listen failed: %v", err)
+	}
+
+	fmt.Printf("I am here")
+	config := &ssh.ClientConfig{
+		User: "root",
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(getPrivateKeys()),
+		},
+	}
+
+	// Dial your ssh server.
+	conn, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", remoteHost), config)
+	if err != nil {
+		log.Fatalf("unable to connect: %s", err)
+	} else {
+		log.Printf("Establish ssh connection with %s:22", remoteHost)
+	}
+	defer conn.Close()
+
+	for {
+		// Setup localConn (type net.Conn)
+		localConnection, err := localListener.Accept()
+		if err != nil {
+			log.Fatalf("listen.Accept failed: %v", err)
+		}
+		defer localConnection.Close()
+
+		remoteConnection, err := conn.Dial("tcp", "127.0.0.1:2375")
+		if err != nil {
+			log.Fatalf("unable to register tcp forward: %v", err)
+		}
+		defer remoteConnection.Close()
+
+		go ioProxy(localConnection, remoteConnection)
+	}
+}
+func main() {
+
+	portMapping("ship01.tapp.in", 8080, 2375)
+	portMapping("ship02.tapp.in", 2345, 2375)
+}
