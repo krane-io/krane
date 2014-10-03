@@ -5,17 +5,22 @@ import (
 	// "io"
 	"net/url"
 	// "os"
+	"encoding/json"
+	dockerApi "github.com/docker/docker/api"
+	"github.com/docker/docker/engine"
+	"github.com/docker/docker/pkg/units"
+	"github.com/docker/docker/utils"
+	"github.com/krane-io/krane/types"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
-
-	"github.com/docker/docker/engine"
-	"github.com/docker/docker/pkg/units"
-	"github.com/docker/docker/utils"
-
-	dockerApi "github.com/docker/docker/api"
 )
+
+type CreateShip struct {
+	Fqdn string
+	Plan string
+}
 
 func (cli *KraneCli) CmdHelp(args ...string) error {
 	if len(args) > 0 {
@@ -64,6 +69,9 @@ func (cli *KraneCli) CmdHelp(args ...string) error {
 		{"unpause", "Unpause a paused container"},
 		{"version", "Show the Docker version information"},
 		{"wait", "Block until a container stops, then print its exit code"},
+		{"ships", "List the number of ships"},
+		{"commission", "Commision a ship"},
+		{"decomission", "Decomission a ship"},
 	} {
 		help += fmt.Sprintf("    %-10.10s%s\n", command[0], command[1])
 	}
@@ -71,8 +79,71 @@ func (cli *KraneCli) CmdHelp(args ...string) error {
 	return nil
 }
 
+func (cli *KraneCli) CmdCommission(args ...string) error {
+	cmd := cli.Subcmd("commission", "[OPTIONS]", "Commision a ship")
+	name := cmd.String([]string{"n", "-name"}, "", "Name of Ship")
+	fqdn := cmd.String([]string{"f", "-fqdn"}, "", "Full qualify domain name of Ship")
+	plan := cmd.String([]string{"p", "-plan"}, "53f0f10fd8a5975a1c000395", "Cloud Plan to use for the commissioning of the Ship")
+
+	if err := cmd.Parse(args); err != nil {
+		return nil
+	}
+
+	if *fqdn == "" || *name == "" {
+		cmd.Usage()
+		return nil
+	}
+
+	parameters := CreateShip{*fqdn, *plan}
+
+	v := url.Values{}
+
+	v.Set("name", *name)
+
+	body, _, err := cli.ReadBody(cli.Call("POST", "/ships/create?"+v.Encode(), parameters, false))
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%s", string(body))
+
+	return nil
+}
+
+func (cli *KraneCli) CmdShips(args ...string) error {
+	cmd := cli.Subcmd("ships", "[OPTIONS]", "List the number of ships")
+	quiet := cmd.Bool([]string{"q", "-quiet"}, false, "Only display numeric IDs")
+
+	if err := cmd.Parse(args); err != nil {
+		return nil
+	}
+
+	v := url.Values{}
+
+	body, _, err := cli.ReadBody(cli.Call("GET", "/ships/json?"+v.Encode(), nil, false))
+	if err != nil {
+		return err
+	}
+
+	var ships []types.Ship
+	json.Unmarshal(body, &ships)
+
+	w := tabwriter.NewWriter(cli.Out(), 20, 1, 3, ' ', 0)
+	fmt.Fprint(w, "ID\tNAME\tFQDN\tIP\tSTATE\tOS\tPLAN\n")
+
+	for _, ship := range ships {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", ship.Id, ship.Name, ship.Fqdn, ship.Ip, ship.State, ship.Os, ship.Plan)
+	}
+
+	if !*quiet {
+		w.Flush()
+	}
+
+	return nil
+}
+
 func (cli *KraneCli) CmdPs(args ...string) error {
-	cmd := cli.Subcmd("ps", "[OPTIONS]", "List containers aaa")
+	cmd := cli.Subcmd("ps", "[OPTIONS]", "List containers")
 	quiet := cmd.Bool([]string{"q", "-quiet"}, false, "Only display numeric IDs")
 	size := cmd.Bool([]string{"s", "-size"}, false, "Display sizes")
 	all := cmd.Bool([]string{"a", "-all"}, false, "Show all containers. Only running containers are shown by default.")
@@ -117,7 +188,7 @@ func (cli *KraneCli) CmdPs(args ...string) error {
 
 	w := tabwriter.NewWriter(cli.Out(), 20, 1, 3, ' ', 0)
 	if !*quiet {
-		fmt.Fprint(w, "SHIP\tCONTAINER ID\tIMAGE\tCOMMAND\tCREATED\tSTATUS\tPORTS\tNAMES")
+		fmt.Fprint(w, "CONTAINER ID\tIMAGE\tCOMMAND\tCREATED\tSTATUS\tPORTS\tNAMES\tSHIP")
 		if *size {
 			fmt.Fprintln(w, "\tSIZE")
 		} else {
@@ -162,7 +233,7 @@ func (cli *KraneCli) CmdPs(args ...string) error {
 					outCommand = utils.Trunc(outCommand, 20)
 				}
 				ports.ReadListFrom([]byte(out.Get("Ports")))
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s ago\t%s\t%s\t%s\t", outShipFQDN, outID, out.Get("Image"), outCommand, units.HumanDuration(time.Now().UTC().Sub(time.Unix(out.GetInt64("Created"), 0))), out.Get("Status"), dockerApi.DisplayablePorts(ports), strings.Join(outNames, ","))
+				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s ago\t%s\t%s\t%s\t", outID, out.Get("Image"), outCommand, units.HumanDuration(time.Now().UTC().Sub(time.Unix(out.GetInt64("Created"), 0))), out.Get("Status"), dockerApi.DisplayablePorts(ports), strings.Join(outNames, ","), outShipFQDN)
 				if *size {
 					if out.GetInt("SizeRootFs") > 0 {
 						fmt.Fprintf(w, "%s (virtual %s)\n", units.HumanSize(out.GetInt64("SizeRw")), units.HumanSize(out.GetInt64("SizeRootFs")))

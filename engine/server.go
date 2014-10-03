@@ -1,7 +1,6 @@
 package engine
 
 import (
-
 	"crypto/tls"
 	"crypto/x509"
 
@@ -24,16 +23,14 @@ import (
 	"github.com/docker/libcontainer/user"
 	"github.com/gorilla/mux"
 
-	dockerApi					"github.com/docker/docker/api"
-	dockerEngine				"github.com/docker/docker/engine"
-	dockerPkgListenBuffer		"github.com/docker/docker/pkg/listenbuffer"
+	dockerApi "github.com/docker/docker/api"
+	dockerEngine "github.com/docker/docker/engine"
+	dockerPkgListenBuffer "github.com/docker/docker/pkg/listenbuffer"
 
-	dockerPkgSystemd			"github.com/docker/docker/pkg/systemd"
-	dockerPkgVersion			"github.com/docker/docker/pkg/version"
+	dockerPkgSystemd "github.com/docker/docker/pkg/systemd"
+	dockerPkgVersion "github.com/docker/docker/pkg/version"
 
-	dockerUtils					"github.com/docker/docker/utils"
-	
-
+	dockerUtils "github.com/docker/docker/utils"
 )
 
 var (
@@ -65,16 +62,11 @@ func httpError(w http.ResponseWriter, err error) {
 	}
 }
 
-
-
-
 func writeCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Access-Control-Allow-Origin", "*")
 	w.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 	w.Header().Add("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS")
 }
-
-
 
 func makeHttpHandler(eng *dockerEngine.Engine, logging bool, localMethod string, localRoute string, handlerFunc types.HttpApiFunc, enableCors bool, dockerVersion dockerPkgVersion.Version) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +128,6 @@ func AttachProfiler(router *mux.Router) {
 	router.HandleFunc("/debug/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	router.HandleFunc("/debug/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 }
-
 
 func createRouter(eng *dockerEngine.Engine, logging, enableCors bool, dockerVersion string) (*mux.Router, error) {
 	r := mux.NewRouter()
@@ -229,9 +220,9 @@ func changeGroup(addr string, nameOrGid string) error {
 // ListenAndServe sets up the required http.Server and gets it listening for
 // each addr passed in and does protocol specific checking.
 func ListenAndServe(proto, addr string, job *dockerEngine.Job) error {
-	dockerUtils.Debugf("Logging: %t",job.GetenvBool("Logging"))
-	dockerUtils.Debugf("EnableCors: %t",job.GetenvBool("EnableCors"))
-	dockerUtils.Debugf("Version: %t",job.GetenvBool("Version"))
+	dockerUtils.Debugf("Logging: %t", job.GetenvBool("Logging"))
+	dockerUtils.Debugf("EnableCors: %t", job.GetenvBool("EnableCors"))
+	dockerUtils.Debugf("Version: %t", job.GetenvBool("Version"))
 
 	AttachJobs(job.Eng)
 

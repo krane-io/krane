@@ -8,9 +8,9 @@ import (
 
 	dockerEngine "github.com/docker/docker/engine"
 	dockerRunconfig "github.com/docker/docker/runconfig"
+	"github.com/krane-io/krane/config"
 
 	"github.com/krane-io/krane/api/server/client"
-	"github.com/krane-io/krane/hacks"
 )
 
 func Containers(job *dockerEngine.Job) dockerEngine.Status {
@@ -114,7 +114,7 @@ func ContainerAttach(job *dockerEngine.Job) dockerEngine.Status {
 }
 
 func ContainerCreate(job *dockerEngine.Job) dockerEngine.Status {
-	configuration := hacks.DockerGetGlobalConfig(job)
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
 	config := dockerRunconfig.ContainerConfigFromJob(job)
 
 	ship := configuration.GetShip(config.Ship)

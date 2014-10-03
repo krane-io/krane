@@ -9,11 +9,11 @@ import (
 
 	"github.com/krane-io/krane/api/server/client"
 
-	"github.com/krane-io/krane/hacks"
+	"github.com/krane-io/krane/config"
 	"github.com/krane-io/krane/types"
 )
 
-func listContainer(job *dockerEngine.Job, configuration types.KraneConfiguration) <-chan *types.APIShip {
+func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguration) <-chan *types.APIShip {
 	v := url.Values{}
 	if all := job.GetenvBool("all"); all {
 		v.Set("all", strconv.FormatBool(all))
@@ -51,7 +51,7 @@ func listContainer(job *dockerEngine.Job, configuration types.KraneConfiguration
 }
 
 func listContainers(job *dockerEngine.Job) []*types.APIShip {
-	configuration := hacks.DockerGetGlobalConfig(job)
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
 	results := listContainer(job, configuration)
 	nShips := len(configuration.Production.Fleet)
 	ships := make([]*types.APIShip, 0, nShips)

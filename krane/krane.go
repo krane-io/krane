@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/krane-io/krane/api/client"
 	"github.com/krane-io/krane/config"
+	"github.com/krane-io/krane/drivers/concerto"
 	"github.com/krane-io/krane/engine"
 	"log"
 	"os"
@@ -49,6 +50,11 @@ func main() {
 	}
 
 	if *flDaemon {
+
+		if configuration.Production.Server.Driver == "concerto" {
+			concerto := concerto.NewDriver()
+			configuration.Driver = concerto
+		}
 		engine.InitializeDockerEngine(configuration)
 		return
 	}
@@ -79,6 +85,5 @@ func main() {
 
 // TODO: We need to do version similar to https://github.com/docker/docker/blob/master/dockerversion/dockerversion.go
 func showVersion() {
-
 	fmt.Printf("Krane version .......\n")
 }

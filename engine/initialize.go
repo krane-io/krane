@@ -2,20 +2,21 @@ package engine
 
 import (
 	"fmt"
+	"github.com/krane-io/krane/config"
+	"github.com/krane-io/krane/ssh"
 	"log"
 	"net/url"
 	"strconv"
-
-	"github.com/krane-io/krane/hacks"
-	"github.com/krane-io/krane/ssh"
-	"github.com/krane-io/krane/types"
 
 	dockerBuiltins "github.com/docker/docker/builtins"
 	dockerEngine "github.com/docker/docker/engine"
 )
 
-func InitializeDockerEngine(configuration types.KraneConfiguration) (eng *dockerEngine.Engine) {
+func InitializeDockerEngine(configuration config.KraneConfiguration) (eng *dockerEngine.Engine) {
 	eng = dockerEngine.New()
+
+	eng.Hack_SetGlobalVar("configuration", configuration)
+
 	// Load default plugins
 	dockerBuiltins.Register(eng)
 
@@ -29,12 +30,21 @@ func InitializeDockerEngine(configuration types.KraneConfiguration) (eng *docker
 
 	job := eng.Job("server_krane_api", listenURL.String())
 
-	fmt.Printf("%v", configuration)
+	parameters := url.Values{}
 
-	hacks.DockerSetGlobalConfig(job, configuration)
+	ships, err := configuration.Driver.List(parameters)
+	if err != nil {
+		log.Fatalf("unable to get list of ships from %s", configuration.Driver.Name())
+	}
 
-	ssh_job := eng.Job("ssh_tunnel")
-	ssh_job.Run()
+	configuration.UpdateShips(ships)
+	eng.Hack_SetGlobalVar("configuration", configuration)
+
+	for _, ship := range configuration.Production.Fleet {
+		fmt.Printf("We are going to queue %s\n", ship.Fqdn)
+		ssh_job := eng.Job("ssh_tunnel", ship.Fqdn, "false")
+		ssh_job.Run()
+	}
 
 	job.SetenvBool("Logging", true)
 	job.SetenvBool("AutoRestart", true)
