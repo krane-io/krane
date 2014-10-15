@@ -11,7 +11,9 @@ In Krane, a ship is a virtual machine (VM) running a Docker instance into which 
 What is a Krane shipyard?
 ---
 
-A Krane shipyard is a driver for Krane that is capable of building, destroying and controlling ships. We've initially provided two drivers. Firstly, a driver for AWS. Secondly, a driver for Flexiant Concerto, a multi-cloud manager that supports AWS, Digital Ocean, Rackspace, Joyent and of course Flexiant Cloud Orchestrator; you can get a free account by visiting https://signup.krane.io/. In either case, you will need to provide the credentials for your cloud providers. We would welcome contribution of additional drivers.
+A Krane shipyard is a driver for Krane that is capable of building, destroying and controlling ships. We've initially provided two drivers. Firstly, a driver for AWS. Secondly, a driver for Flexiant Concerto, a multi-cloud manager that supports AWS, Digital Ocean, Rackspace, Joyent and of course Flexiant Cloud Orchestrator.
+
+If you want to use the driver for Flexiant Concerto, you can get a free account by visiting https://signup.krane.io/; you'll need the code as well of course. If you want to use the AWS driver, you just need the code (see below). In either case, you will need to provide the credentials for your cloud providers. We would welcome contribution of additional drivers.
 
 Where can I get the code? What licence is used?
 ---
