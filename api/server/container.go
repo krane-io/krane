@@ -6,11 +6,11 @@ import (
 	"net/url"
 	"strconv"
 
-	dockerEngine "github.com/docker/docker/engine"
-	dockerRunconfig "github.com/docker/docker/runconfig"
-	"github.com/krane-io/krane/config"
-
 	"github.com/krane-io/krane/api/server/client"
+	"github.com/krane-io/krane/config"
+	"github.com/krane-io/krane/runconfig"
+
+	dockerEngine "github.com/docker/docker/engine"
 )
 
 func Containers(job *dockerEngine.Job) dockerEngine.Status {
@@ -21,7 +21,7 @@ func Containers(job *dockerEngine.Job) dockerEngine.Status {
 }
 
 func ContainerStart(job *dockerEngine.Job) dockerEngine.Status {
-	hostConfig := dockerRunconfig.ContainerHostConfigFromJob(job)
+	hostConfig := runconfig.ContainerHostConfigFromJob(job)
 	if len(job.Args) != 1 {
 		return job.Errorf("Usage: %s CONTAINER\n", job.Name)
 	}
@@ -115,7 +115,7 @@ func ContainerAttach(job *dockerEngine.Job) dockerEngine.Status {
 
 func ContainerCreate(job *dockerEngine.Job) dockerEngine.Status {
 	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
-	config := dockerRunconfig.ContainerConfigFromJob(job)
+	config := runconfig.ContainerConfigFromJob(job)
 
 	ship := configuration.GetShip(config.Ship)
 

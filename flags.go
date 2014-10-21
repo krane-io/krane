@@ -1,10 +1,9 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/user"
-	"log"
-	"path/filepath"
 
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/opts"
@@ -25,12 +24,12 @@ func init() {
 	if kraneCertPath == "" {
 		user, err := user.Current()
 		if err != nil {
-			 log.Fatalln(err)
+			log.Fatalln(err)
 		}
 		if user.Uid == "0" {
 			kraneCertPath = "/etc/krane"
 		} else {
-			kraneCertPath = user.HomeDir+"/.krane"
+			kraneCertPath = user.HomeDir + "/.krane"
 		}
 	}
 }
@@ -66,14 +65,3 @@ var (
 	flCert *string
 	flKey  *string
 )
-
-func init() {
-	flCa = flag.String([]string{"-tlscacert"}, filepath.Join(kraneCertPath, defaultCaFile), "Trust only remotes providing a certificate signed by the CA given here")
-	flCert = flag.String([]string{"-tlscert"}, filepath.Join(kraneCertPath, defaultCertFile), "Path to TLS certificate file")
-	flKey = flag.String([]string{"-tlskey"}, filepath.Join(kraneCertPath, defaultKeyFile), "Path to TLS key file")
-
-	flag.Var(&flDns, []string{"#dns", "-dns"}, "Force Krane to use specific DNS servers")
-	flag.Var(&flDnsSearch, []string{"-dns-search"}, "Force Krane to use specific DNS search domains")
-	flag.Var(&flHosts, []string{"H", "-host"}, "The socket(s) to bind to in daemon mode\nspecified using one or more tcp://host:port, unix:///path/to/socket, fd://* or fd://socketfd.")
-	flag.Var(&flGraphOpts, []string{"-storage-opt"}, "Set storage driver options")
-}

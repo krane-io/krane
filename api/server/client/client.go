@@ -15,6 +15,7 @@ import (
 	dockerApi "github.com/docker/docker/api"
 	dockerVersion "github.com/docker/docker/dockerversion"
 	dockerEngine "github.com/docker/docker/engine"
+	dockerPkgStdCopy "github.com/docker/docker/pkg/stdcopy"
 	dockerUtils "github.com/docker/docker/utils"
 
 	"github.com/krane-io/krane/types"
@@ -192,7 +193,7 @@ func (cli *KraneClientApi) streamHelper(method, path string, setRawTerminal bool
 		if setRawTerminal {
 			_, err = io.Copy(stdout, resp.Body)
 		} else {
-			_, err = dockerUtils.StdCopy(stdout, stderr, resp.Body)
+			_, err = dockerPkgStdCopy.StdCopy(stdout, stderr, resp.Body)
 		}
 		fmt.Printf("[stream] End of stdout") // TODO: Look into this
 		return err

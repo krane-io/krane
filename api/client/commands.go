@@ -26,7 +26,7 @@ func (cli *KraneCli) CmdHelp(args ...string) error {
 	if len(args) > 0 {
 		method, exists := cli.getMethod(args[0])
 		if !exists {
-			fmt.Fprintf(cli.Err(), "Error: Command not found: %s\n", args[0])
+			fmt.Fprintf(cli.err, "Error: Command not found: %s\n", args[0])
 		} else {
 			method("--help")
 			return nil
@@ -75,7 +75,7 @@ func (cli *KraneCli) CmdHelp(args ...string) error {
 	} {
 		help += fmt.Sprintf("    %-15.15s%s\n", command[0], command[1])
 	}
-	fmt.Fprintf(cli.Err(), "%s\n", help)
+	fmt.Fprintf(cli.err, "%s\n", help)
 	return nil
 }
 
@@ -100,7 +100,7 @@ func (cli *KraneCli) CmdCommission(args ...string) error {
 
 	v.Set("name", *name)
 
-	body, _, err := cli.ReadBody(cli.Call("POST", "/ships/create?"+v.Encode(), parameters, false))
+	body, _, err := readBody(cli.call("POST", "/ships/create?"+v.Encode(), parameters, false))
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (cli *KraneCli) CmdShips(args ...string) error {
 
 	v := url.Values{}
 
-	body, _, err := cli.ReadBody(cli.Call("GET", "/ships/json?"+v.Encode(), nil, false))
+	body, _, err := readBody(cli.call("GET", "/ships/json?"+v.Encode(), nil, false))
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (cli *KraneCli) CmdShips(args ...string) error {
 	var ships []types.Ship
 	json.Unmarshal(body, &ships)
 
-	w := tabwriter.NewWriter(cli.Out(), 20, 1, 3, ' ', 0)
+	w := tabwriter.NewWriter(cli.out, 20, 1, 3, ' ', 0)
 	fmt.Fprint(w, "ID\tNAME\tFQDN\tIP\tSTATE\tOS\tPLAN\n")
 
 	for _, ship := range ships {
@@ -176,7 +176,7 @@ func (cli *KraneCli) CmdPs(args ...string) error {
 		v.Set("size", "1")
 	}
 
-	body, _, err := cli.ReadBody(cli.Call("GET", "/containers/json?"+v.Encode(), nil, false))
+	body, _, err := readBody(cli.call("GET", "/containers/json?"+v.Encode(), nil, false))
 	if err != nil {
 		return err
 	}
@@ -186,7 +186,7 @@ func (cli *KraneCli) CmdPs(args ...string) error {
 		return err
 	}
 
-	w := tabwriter.NewWriter(cli.Out(), 20, 1, 3, ' ', 0)
+	w := tabwriter.NewWriter(cli.out, 20, 1, 3, ' ', 0)
 	if !*quiet {
 		fmt.Fprint(w, "CONTAINER ID\tIMAGE\tCOMMAND\tCREATED\tSTATUS\tPORTS\tNAMES\tSHIP")
 		if *size {

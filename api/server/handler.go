@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	dockerAPI "github.com/docker/docker/api"
-	dockerAPIServer "github.com/docker/docker/api/server"
 	dockerEngine "github.com/docker/docker/engine"
 	dockerPkgVersion "github.com/docker/docker/pkg/version"
 	dockerUtils "github.com/docker/docker/utils"
@@ -18,7 +17,7 @@ var ServerRoutes = map[string]map[string]types.HttpApiFunc{
 	"GET": {
 		"/_ping":                          GetCatchAll,
 		"/events":                         GetCatchAll,
-		"/info":                           dockerAPIServer.GetInfo,
+		"/info":                           getInfo,
 		"/version":                        GetCatchAll,
 		"/images/json":                    GetCatchAll,
 		"/images/viz":                     GetCatchAll,
@@ -26,8 +25,8 @@ var ServerRoutes = map[string]map[string]types.HttpApiFunc{
 		"/images/{name:.*}/get":           GetCatchAll,
 		"/images/{name:.*}/history":       GetCatchAll,
 		"/images/{name:.*}/json":          GetCatchAll,
-		"/containers/ps":                  dockerAPIServer.GetContainersJSON,
-		"/containers/json":                dockerAPIServer.GetContainersJSON,
+		"/containers/ps":                  getContainersJSON,
+		"/containers/json":                getContainersJSON,
 		"/containers/{name:.*}/export":    GetCatchAll,
 		"/containers/{name:.*}/changes":   GetCatchAll,
 		"/containers/{name:.*}/json":      GetCatchAll,
@@ -44,17 +43,17 @@ var ServerRoutes = map[string]map[string]types.HttpApiFunc{
 		"/images/load":                  GetCatchAll,
 		"/images/{name:.*}/push":        GetCatchAll,
 		"/images/{name:.*}/tag":         GetCatchAll,
-		"/containers/create":            dockerAPIServer.PostContainersCreate,
+		"/containers/create":            postContainersCreate,
 		"/ships/create":                 PostShipsCreate,
 		"/containers/{name:.*}/kill":    GetCatchAll,
 		"/containers/{name:.*}/pause":   GetCatchAll,
 		"/containers/{name:.*}/unpause": GetCatchAll,
 		"/containers/{name:.*}/restart": GetCatchAll,
-		"/containers/{name:.*}/start":   dockerAPIServer.PostContainersStart,
-		"/containers/{name:.*}/stop":    dockerAPIServer.PostContainersStop,
+		"/containers/{name:.*}/start":   postContainersStart,
+		"/containers/{name:.*}/stop":    postContainersStop,
 		"/containers/{name:.*}/wait":    GetCatchAll,
 		"/containers/{name:.*}/resize":  GetCatchAll,
-		"/containers/{name:.*}/attach":  dockerAPIServer.PostContainersAttach,
+		"/containers/{name:.*}/attach":  postContainersAttach,
 		"/containers/{name:.*}/copy":    GetCatchAll,
 	},
 	"DELETE": {

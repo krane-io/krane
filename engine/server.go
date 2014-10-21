@@ -30,7 +30,7 @@ import (
 	dockerPkgSystemd "github.com/docker/docker/pkg/systemd"
 	dockerPkgVersion "github.com/docker/docker/pkg/version"
 
-	dockerUtils "github.com/docker/docker/utils"
+	dockerPkgLog "github.com/docker/docker/pkg/log"
 )
 
 var (
@@ -57,7 +57,7 @@ func httpError(w http.ResponseWriter, err error) {
 	}
 
 	if err != nil {
-		dockerUtils.Errorf("HTTP Error: statusCode=%d %s", statusCode, err.Error())
+		dockerPkgLog.Errorf("HTTP Error: statusCode=%d %s", statusCode, err.Error())
 		http.Error(w, err.Error(), statusCode)
 	}
 }
@@ -71,7 +71,7 @@ func writeCorsHeaders(w http.ResponseWriter, r *http.Request) {
 func makeHttpHandler(eng *dockerEngine.Engine, logging bool, localMethod string, localRoute string, handlerFunc types.HttpApiFunc, enableCors bool, dockerVersion dockerPkgVersion.Version) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// log the request
-		dockerUtils.Debugf("Calling %s %s", localMethod, localRoute)
+		dockerPkgLog.Debugf("Calling %s %s", localMethod, localRoute)
 
 		if logging {
 			log.Println(r.Method, r.RequestURI)
@@ -80,7 +80,7 @@ func makeHttpHandler(eng *dockerEngine.Engine, logging bool, localMethod string,
 		if strings.Contains(r.Header.Get("User-Agent"), "Docker-Client/") {
 			userAgent := strings.Split(r.Header.Get("User-Agent"), "/")
 			if len(userAgent) == 2 && !dockerVersion.Equal(dockerPkgVersion.Version(userAgent[1])) {
-				dockerUtils.Debugf("Warning: client and server don't have the same version (client: %s, server: %s)", userAgent[1], dockerVersion)
+				dockerPkgLog.Debugf("Warning: client and server don't have the same version (client: %s, server: %s)", userAgent[1], dockerVersion)
 			}
 		}
 		version := dockerPkgVersion.Version(mux.Vars(r)["version"])
@@ -97,7 +97,7 @@ func makeHttpHandler(eng *dockerEngine.Engine, logging bool, localMethod string,
 		}
 
 		if err := handlerFunc(eng, version, w, r, mux.Vars(r)); err != nil {
-			dockerUtils.Errorf("Error making handler: %s", err)
+			dockerPkgLog.Errorf("Error making handler: %s", err)
 			httpError(w, err)
 		}
 	}
@@ -137,7 +137,7 @@ func createRouter(eng *dockerEngine.Engine, logging, enableCors bool, dockerVers
 
 	for method, routes := range server.ServerRoutes {
 		for route, fct := range routes {
-			dockerUtils.Debugf("Registering %s, %s", method, route)
+			dockerPkgLog.Debugf("Registering %s, %s", method, route)
 			// NOTE: scope issue, make sure the variables are local and won't be changed
 			localRoute := route
 			localFct := fct
@@ -213,16 +213,16 @@ func changeGroup(addr string, nameOrGid string) error {
 		return err
 	}
 
-	dockerUtils.Debugf("%s group found. gid: %d", nameOrGid, gid)
+	dockerPkgLog.Debugf("%s group found. gid: %d", nameOrGid, gid)
 	return os.Chown(addr, 0, gid)
 }
 
 // ListenAndServe sets up the required http.Server and gets it listening for
 // each addr passed in and does protocol specific checking.
 func ListenAndServe(proto, addr string, job *dockerEngine.Job) error {
-	dockerUtils.Debugf("Logging: %t", job.GetenvBool("Logging"))
-	dockerUtils.Debugf("EnableCors: %t", job.GetenvBool("EnableCors"))
-	dockerUtils.Debugf("Version: %t", job.GetenvBool("Version"))
+	dockerPkgLog.Debugf("Logging: %t", job.GetenvBool("Logging"))
+	dockerPkgLog.Debugf("EnableCors: %t", job.GetenvBool("EnableCors"))
+	dockerPkgLog.Debugf("Version: %t", job.GetenvBool("Version"))
 
 	AttachJobs(job.Eng)
 
@@ -298,7 +298,7 @@ func ListenAndServe(proto, addr string, job *dockerEngine.Job) error {
 			if err := changeGroup(addr, socketGroup); err != nil {
 				if socketGroup == "docker" {
 					// if the user hasn't explicitly specified the group ownership, don't fail on errors.
-					dockerUtils.Debugf("Warning: could not chgrp %s to docker: %s", addr, err.Error())
+					dockerPkgLog.Debugf("Warning: could not chgrp %s to docker: %s", addr, err.Error())
 				} else {
 					return err
 				}

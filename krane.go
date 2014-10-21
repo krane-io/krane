@@ -69,7 +69,7 @@ func main() {
 		cli *client.KraneCli
 	)
 
-	cli = client.NewKraneCli(os.Stdin, os.Stdout, os.Stderr, protoAddrParts[0], protoAddrParts[1], nil)
+	cli = client.NewKraneCli(os.Stdin, os.Stdout, os.Stderr, nil, protoAddrParts[0], protoAddrParts[1], nil)
 
 	if err := cli.Cmd(flag.Args()...); err != nil {
 		if sterr, ok := err.(*dockerUtils.StatusError); ok {
