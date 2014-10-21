@@ -73,7 +73,7 @@ func (cli *KraneCli) CmdHelp(args ...string) error {
 		{"commission", "Commision a ship"},
 		{"decomission", "Decomission a ship"},
 	} {
-		help += fmt.Sprintf("    %-10.10s%s\n", command[0], command[1])
+		help += fmt.Sprintf("    %-15.15s%s\n", command[0], command[1])
 	}
 	fmt.Fprintf(cli.Err(), "%s\n", help)
 	return nil
@@ -198,7 +198,7 @@ func (cli *KraneCli) CmdPs(args ...string) error {
 
 	for _, outShip := range ships.Data {
 		var (
-			outShipFQDN   = outShip.Get("Fqdn")
+			outShipFQDN   = outShip.Get("fqdn")
 			outContainers = outShip.Get("Containers")
 		)
 

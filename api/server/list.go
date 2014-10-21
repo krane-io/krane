@@ -9,17 +9,18 @@ import (
 
 	"github.com/krane-io/krane/api/server/client"
 
+	"fmt"
 	"github.com/krane-io/krane/config"
 	"github.com/krane-io/krane/types"
 )
 
-func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguration) <-chan *types.APIShip {
+func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguration) <-chan *types.Ship {
 	v := url.Values{}
 	if all := job.GetenvBool("all"); all {
 		v.Set("all", strconv.FormatBool(all))
 	}
 
-	ch := make(chan *types.APIShip, len(configuration.Production.Fleet))
+	ch := make(chan *types.Ship, len(configuration.Production.Fleet))
 	for _, ship := range configuration.Production.Fleet {
 		go func(ship types.Ship) {
 
@@ -32,15 +33,16 @@ func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguratio
 			if err != nil {
 				job.Logf("Error: %s", err.Error())
 			}
-			var resultShip types.APIShip
+			var resultShip types.Ship
 			if (statusCode >= 200) && (statusCode < 300) {
-				var containerList []types.APIContainers
+				var containerList []types.Containers
 				json.Unmarshal(body, &containerList)
 				resultShip.Name = ship.Name
 				resultShip.Fqdn = ship.Fqdn
 				resultShip.Port = ship.Port
-				resultShip.Status = true
+				resultShip.State = "operational"
 				resultShip.Containers = containerList
+				fmt.Printf("%#v", resultShip)
 				ch <- &resultShip
 			} else {
 				ch <- nil
@@ -50,11 +52,11 @@ func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguratio
 	return ch
 }
 
-func listContainers(job *dockerEngine.Job) []*types.APIShip {
+func listContainers(job *dockerEngine.Job) []*types.Ship {
 	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
 	results := listContainer(job, configuration)
 	nShips := len(configuration.Production.Fleet)
-	ships := make([]*types.APIShip, 0, nShips)
+	ships := make([]*types.Ship, 0, nShips)
 	for i := 0; i < nShips; i++ {
 		result := <-results
 		if result != nil {
