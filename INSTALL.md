@@ -1,29 +1,31 @@
-## Requisites
+## Prerequisites
 
-Please install and download GOPM package manager. If you have issues please visit https://github.com/gpmgo/gopm for a more details process.
+Before you start, you will need to install and download the GOPM package manager. You can install this by typing:
 
-	go get -u github.com/gpmgo/gopm
+    go get -u github.com/gpmgo/gopm
 
-## Installation
+If you have any issues, please visit https://github.com/gpmgo/gopm for a more detailed description of the install process for GOPM.
 
-First lets download all the code
+## Installation of Krane
 
-	go get -u github.com/krane-io/krane
+First, download all the code:
 
-Then we install all the package dependencies
+    go get -u github.com/krane-io/krane
+
+Next, install all the package dependencies:
 
     cd $GOPATH/src/github.com/krane-io/krane
     gopm get
     
-Then we compile the project
+Then compile the project:
     
     gopm build
     
-Voilà you should have a Krane binary ready to use.
+Voilà, you should now have a Krane binary ready to use.
 
 ## Configuration
 
-Firstly create a folder in your home called *.krane*
+First, create a folder in your home called *.krane*
 
     mkdir -p ~/.krane/
     
@@ -40,19 +42,27 @@ production:
       port: 1979
       schema: tcp
 ```
-## Configuration AWS
+## Configuring AWS as your cloud driver
 
-In case you want to use AWS as your default cloud provider please indicate it in krane/config.yml in the driver part. Once indicated Krane will automatically use AWS tools to get your cloud credentials. You can configure you aws tools set executing
+In case you want to use AWS as your default cloud driver, please indicate this in *krane/config.yml* by using the line:
+
+    driver: aws
+
+Once you have done this, Krane will automatically use AWS tools to get your cloud credentials. You can configure your AWS tools set executing:
 
     aws configure
     
-After doing this you need to install chef-metal so that krane can install docker uniformly across multiple machines.
+After doing this, you need to install chef-metal so that Krane can install Docker uniformly across multiple machines.
 
     gem install chef-metal-fog chef-metal
     
-## Configuration Concerto
+## Configuring Flexiant Concerto
 
-Log into concerto and go to *Settings -> Your Account* and download you api key and decompress it in *~/.krane/concerto*
+First, if you don't already have a Flexiant Concerto account, log into *http://krane.io/* and create a free account.
+
+Next, log into Concerto (use the *krane.io* link if that's how you got your account), go to *Settings -> Your Account* and download you api key and decompress it into *~/.krane/concerto* as follows:
 
     mkdir -p ~/.krane/concerto
     unzip api-key.zip
+
+That's it. Now you can use Krane to provision Docker containers across multiple clouds.
