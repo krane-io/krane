@@ -56,7 +56,7 @@ After doing this, you need to install chef-metal so that Krane can install Docke
 
     gem install chef-metal-fog chef-metal
     
-## Configuring Flexiant Concerto
+## Configuring Flexiant Concerto as your cloud driver
 
 First, if you don't already have a Flexiant Concerto account, log into *http://krane.io/* and create a free account.
 
