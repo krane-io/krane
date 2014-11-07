@@ -3,10 +3,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/engine"
 	"github.com/docker/docker/opts"
-	"github.com/docker/docker/pkg/log"
 	"github.com/docker/docker/pkg/promise"
 	"github.com/docker/docker/pkg/signal"
 	"github.com/docker/docker/pkg/units"

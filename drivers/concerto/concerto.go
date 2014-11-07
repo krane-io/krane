@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/docker/docker/pkg/log"
+	log "github.com/Sirupsen/logrus"
 	"github.com/krane-io/krane/config"
 	"github.com/krane-io/krane/types"
 	"io/ioutil"
