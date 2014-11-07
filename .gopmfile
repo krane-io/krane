@@ -9,7 +9,7 @@ github.com/docker/libcontainer =
 github.com/gorilla/mux = 
 gopkg.in/yaml.v1 = 
 github.com/docker/libtrust = 
-github.com/sirupsen/logrus =
+github.com/Sirupsen/logrus = 
 
 [res]
 include = api|config|drivers|engine|ssh|types|utilities
