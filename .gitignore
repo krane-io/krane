@@ -1,0 +1,4 @@
+.vendor
+krane.demo
+chef/clients
+chef/nodes

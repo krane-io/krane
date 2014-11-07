@@ -25,7 +25,6 @@ func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguratio
 		go func(ship types.Ship) {
 
 			cli := client.NewKraneClientApi(ship, false, job)
-
 			body, statusCode, err := readBody(cli.Call("GET", "/containers/json?"+v.Encode(), nil, false))
 
 			job.Logf("(%d) %s\n", statusCode, body)

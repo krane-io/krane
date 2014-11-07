@@ -7,6 +7,29 @@ import (
 	"net/url"
 )
 
+func Plan(job *dockerEngine.Job) dockerEngine.Status {
+	parameters := url.Values{}
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+
+	if len(job.Args) > 0 {
+		parameters.Set("name", job.Args[0])
+	}
+
+	plans, err := configuration.Driver.Plan(parameters)
+	if err != nil {
+		job.Errorf("unable to get list of ships from %s", configuration.Driver.Name())
+	}
+
+	jsonShip, err := json.Marshal(plans)
+
+	if err != nil {
+		job.Errorf("unable to marshal to json ship response")
+	}
+
+	job.Stdout.Write(jsonShip)
+	return dockerEngine.StatusOK
+}
+
 func List(job *dockerEngine.Job) dockerEngine.Status {
 	parameters := url.Values{}
 	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
@@ -22,6 +45,37 @@ func List(job *dockerEngine.Job) dockerEngine.Status {
 	}
 
 	job.Stdout.Write(jsonShip)
+	return dockerEngine.StatusOK
+}
+
+func Decomission(job *dockerEngine.Job) dockerEngine.Status {
+	var name string
+	if len(job.Args) == 1 {
+		name = job.Args[0]
+	} else if len(job.Args) > 1 {
+		return job.Errorf("Usage: %s", job.Name)
+	}
+
+	fqdn := job.Getenv("Fqdn")
+	plan := job.Getenv("Plan")
+
+	parameters := url.Values{}
+	parameters.Set("name", name)
+	parameters.Set("fqdn", fqdn)
+	parameters.Set("plan", plan)
+
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+	id, err := configuration.Driver.Create(parameters)
+
+	if err != nil {
+		job.Errorf("unable to create ship %s", fqdn)
+	}
+
+	job.Stdout.Write([]byte(id))
+
+	newjob := job.Eng.Job("ssh_tunnel", fqdn, "true")
+	go newjob.Run()
+
 	return dockerEngine.StatusOK
 }
 

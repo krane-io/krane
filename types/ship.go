@@ -37,3 +37,15 @@ type Containers struct {
 	SizeRootFs int64
 	Names      []string
 }
+
+type Clouds struct {
+	Plans []Plan
+}
+
+type Plan struct {
+	Id        string `json:"id"`
+	Provider  string `json:"cloud_provider"`
+	Continent string `json:"continent"`
+	Region    string `json:"region"`
+	Plan      string `json:"plan"`
+}

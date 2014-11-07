@@ -22,7 +22,6 @@ func shipWithContainerId(job *dockerEngine.Job, id string) *types.Ship {
 					}
 				}
 			}
-
 		}
 	}
 	return nil

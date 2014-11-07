@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
-	dockerEngine "github.com/docker/docker/engine"
+	"github.com/docker/docker/engine"
 )
 
-func getPrivateKeys(job *dockerEngine.Job) ssh.Signer {
+func getPrivateKeys(job *engine.Job) ssh.Signer {
 	privateBytes, err := ioutil.ReadFile(os.Getenv("HOME") + "/.ssh/id_rsa")
 
 	if err != nil {
@@ -32,7 +32,7 @@ func ioProxy(conn1 net.Conn, conn2 net.Conn) {
 	go io.Copy(conn2, conn1)
 }
 
-func portMapping(job *dockerEngine.Job, remoteHost string, localPort int, remotePort int) {
+func portMapping(job *engine.Job, remoteHost string, localPort int, remotePort int) {
 	localListener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", localPort))
 	if err != nil {
 		job.Errorf("\nnet.Listen failed: %v", err)
@@ -50,7 +50,7 @@ func portMapping(job *dockerEngine.Job, remoteHost string, localPort int, remote
 	if err != nil {
 		job.Errorf("\nUnable to connect: %s with %s", err, remoteHost)
 	} else {
-		job.Logf("\nEstablish ssh tunnel with %s:22:%d", remoteHost, localPort)
+		job.Logf("\nEstablish ssh tunnel with %s:22 %d:%d", remoteHost, localPort, remotePort)
 	}
 
 	defer conn.Close()
@@ -79,7 +79,7 @@ func portMapping(job *dockerEngine.Job, remoteHost string, localPort int, remote
 	}()
 }
 
-func Tunnel(job *dockerEngine.Job) dockerEngine.Status {
+func Tunnel(job *engine.Job) engine.Status {
 	var fqdn string
 	var delayed string
 	if len(job.Args) == 2 {
@@ -119,7 +119,7 @@ func Tunnel(job *dockerEngine.Job) dockerEngine.Status {
 		job.Eng.Hack_SetGlobalVar("configuration", configuration)
 		fmt.Printf("%#v", configuration.Production.Fleet)
 		go portMapping(job, ship.Fqdn, ship.LocalPort, ship.Port)
-		return dockerEngine.StatusOK
+		return engine.StatusOK
 
 	} else {
 		job.Logf("\nGoing to queue job to create tunnel for %s\n", fqdn)
@@ -129,6 +129,6 @@ func Tunnel(job *dockerEngine.Job) dockerEngine.Status {
 		} else {
 			go newjob.Run()
 		}
-		return dockerEngine.StatusOK
+		return engine.StatusOK
 	}
 }

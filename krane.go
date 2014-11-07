@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/krane-io/krane/api/client"
 	"github.com/krane-io/krane/config"
+	"github.com/krane-io/krane/drivers/aws"
 	"github.com/krane-io/krane/drivers/concerto"
 	"github.com/krane-io/krane/engine"
 	"log"
@@ -52,9 +53,11 @@ func main() {
 	if *flDaemon {
 
 		if configuration.Production.Server.Driver == "concerto" {
-			concerto := concerto.NewDriver()
-			configuration.Driver = concerto
+			configuration.Driver = concerto.NewDriver()
+		} else if configuration.Production.Server.Driver == "aws" {
+			configuration.Driver = aws.NewDriver()
 		}
+
 		engine.InitializeDockerEngine(configuration)
 		return
 	}

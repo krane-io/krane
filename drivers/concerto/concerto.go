@@ -6,15 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/docker/docker/pkg/log"
 	"github.com/krane-io/krane/config"
 	"github.com/krane-io/krane/types"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
-	"text/tabwriter"
+	"strings"
 )
 
 type Client struct {
@@ -23,26 +22,14 @@ type Client struct {
 	endpoint    string
 }
 
-type Clouds struct {
-	Plans []Plan
-}
-
-type Plan struct {
-	Id        string `json:"id"`
-	Provider  string `json:"cloud_provider"`
-	Continent string `json:"continent"`
-	Region    string `json:"region"`
-	Plan      string `json:"plan"`
-}
-
 func (client *Client) loadCertificates() {
 	/**
 	 * Loads Clients Certificates and creates and 509KeyPair
 	 */
 	var err error
-	client.certificate, err = tls.LoadX509KeyPair(fmt.Sprintf("%s/concerto/public.pem", config.ConfigPath()), fmt.Sprintf("%s/concerto/private.pem", config.ConfigPath()))
+	client.certificate, err = tls.LoadX509KeyPair(fmt.Sprintf("%s/concerto/cert.crt", config.ConfigPath()), fmt.Sprintf("%s/concerto/private/cert.key", config.ConfigPath()))
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 		return
 	}
 }
@@ -60,7 +47,7 @@ func (client *Client) createConnection() {
 func (client *Client) Get(url string) []byte {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
@@ -69,7 +56,7 @@ func (client *Client) Get(url string) []byte {
 	defer response.Body.Close()
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 	if response.StatusCode >= 400 {
 		log.Fatal(response.StatusCode)
@@ -87,7 +74,7 @@ func (client *Client) Get(url string) []byte {
 func (client *Client) Put(url string) []byte {
 	request, err := http.NewRequest("PUT", url, nil)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
@@ -96,7 +83,7 @@ func (client *Client) Put(url string) []byte {
 	defer response.Body.Close()
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 	if response.StatusCode >= 400 {
 		log.Fatal(response.StatusCode)
@@ -114,7 +101,7 @@ func (client *Client) Put(url string) []byte {
 func (client *Client) Post(url string, parameters url.Values) []byte {
 	request, err := http.NewRequest("POST", url, bytes.NewBufferString(parameters.Encode()))
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
 	request.Header.Set("Accept", "application/json")
@@ -124,7 +111,7 @@ func (client *Client) Post(url string, parameters url.Values) []byte {
 	response, err := client.connection.Do(request)
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 	defer response.Body.Close()
 
@@ -163,25 +150,38 @@ func (client *Client) Create(parameters url.Values) (string, error) {
 
 }
 
-func (client *Client) GetCloudPlans() []Plan {
+func (client *Client) Plan(parameters url.Values) ([]types.Plan, error) {
 	output := client.Get(client.endpoint + "/krane/clouds")
 
-	var cloud Clouds
+	var cloud types.Clouds
 	json.Unmarshal(output, &cloud)
 
-	w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
-	fmt.Fprint(w, "ID\tPROVIDER\tCONTINENT\tREGION\tPLAN\n")
+	var final []types.Plan
 
-	for _, plan := range cloud.Plans {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", plan.Id, plan.Provider, plan.Continent, plan.Region, plan.Plan)
+	if parameters.Get("name") == "all" {
+		return cloud.Plans, nil
+	} else if parameters.Get("name") != "" {
+		name := strings.ToLower(parameters.Get("name"))
+		for _, plan := range cloud.Plans {
+			if strings.Contains(strings.ToLower(plan.Id), name) {
+				final = append(final, plan)
+			} else if strings.Contains(strings.ToLower(plan.Provider), name) {
+				final = append(final, plan)
+			} else if strings.Contains(strings.ToLower(plan.Continent), name) {
+				final = append(final, plan)
+			} else if strings.Contains(strings.ToLower(plan.Region), name) {
+				final = append(final, plan)
+			} else if strings.Contains(strings.ToLower(plan.Plan), name) {
+				final = append(final, plan)
+			}
+		}
+		return final, nil
+	} else {
+		return cloud.Plans, nil
 	}
-	w.Flush()
-
-	return cloud.Plans
 }
 
 func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
-
 	output := client.Get(client.endpoint + "/krane/ships")
 
 	var fleet types.Fleet
@@ -198,14 +198,6 @@ func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
 	} else {
 		final = fleet.Ships
 	}
-
-	// w := tabwriter.NewWriter(os.Stdout, 20, 1, 3, ' ', 0)
-	// fmt.Fprint(w, "ID\tNAME\tFQDN\tIP\tSTATE\tOS\tPLAN\n")
-
-	// for _, ship := range fleet.Ships {
-	// 	fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", ship.Id, ship.Name, ship.Fqdn, ship.Ip, ship.State, ship.Os, ship.Plan)
-	// }
-	// w.Flush()
 
 	return final, nil
 }
@@ -228,18 +220,3 @@ func (client *Client) Stop(args map[string]string) error {
 	fmt.Printf("%s", string(output))
 	return nil
 }
-
-// func main() {
-
-// 	// start_krane_ship PUT    /krane/ships/:id/start(.:format)                                       api/krane/ships#start
-// 	//      krane_ships GET    /krane/ships(.:format)                                                 api/krane/ships#index
-// 	//     krane_clouds GET    /krane/clouds(.:format)
-// 	concerto := NewDriver()
-
-// 	// concerto.CreateShip("cadvisor5.concerto.io", "53f0f10fd8a5975a1c00038f")
-// 	concerto.GetShips()
-// 	//concerto.GetCloudPlans()
-// 	//concerto.StopShip("241a7c8e8d88")
-// 	//concerto.StartShip("da33c245fdc3")
-// 	// fmt.Printf("\n\n\n")
-// }

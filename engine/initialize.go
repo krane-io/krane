@@ -2,14 +2,14 @@ package engine
 
 import (
 	"fmt"
+	"github.com/docker/docker/builtins"
+	dockerEngine "github.com/docker/docker/engine"
+	"github.com/krane-io/krane/api/server"
 	"github.com/krane-io/krane/config"
 	"github.com/krane-io/krane/ssh"
 	"log"
 	"net/url"
 	"strconv"
-
-	dockerBuiltins "github.com/docker/docker/builtins"
-	dockerEngine "github.com/docker/docker/engine"
 )
 
 func InitializeDockerEngine(configuration config.KraneConfiguration) (eng *dockerEngine.Engine) {
@@ -18,9 +18,9 @@ func InitializeDockerEngine(configuration config.KraneConfiguration) (eng *docke
 	eng.Hack_SetGlobalVar("configuration", configuration)
 
 	// Load default plugins
-	dockerBuiltins.Register(eng)
+	builtins.Register(eng)
 
-	eng.Register("server_krane_api", ServeApi)
+	eng.Register("server_krane_api", server.ServeApi)
 	eng.Register("ssh_tunnel", ssh.Tunnel)
 
 	listenURL := &url.URL{

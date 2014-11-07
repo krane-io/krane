@@ -1,12 +1,15 @@
 [target]
-path=github.com/krane-io/krane
+path = github.com/krane-io/krane
 
 [deps]
+github.com/mitchellh/goamz = 
 code.google.com/p/go.crypto = 
 github.com/docker/docker = 
 github.com/docker/libcontainer = 
 github.com/gorilla/mux = 
 gopkg.in/yaml.v1 = 
+github.com/docker/libtrust = 
+github.com/sirupsen/logrus =
 
 [res]
 include = api|config|drivers|engine|ssh|types|utilities
