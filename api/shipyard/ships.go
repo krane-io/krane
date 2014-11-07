@@ -2,14 +2,14 @@ package shipyard
 
 import (
 	"encoding/json"
-	dockerEngine "github.com/docker/docker/engine"
-	"github.com/krane-io/krane/config"
+	"github.com/docker/docker/engine"
+	"github.com/krane-io/krane/types"
 	"net/url"
 )
 
-func Plan(job *dockerEngine.Job) dockerEngine.Status {
+func Plan(job *engine.Job) engine.Status {
 	parameters := url.Values{}
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 
 	if len(job.Args) > 0 {
 		parameters.Set("name", job.Args[0])
@@ -27,12 +27,12 @@ func Plan(job *dockerEngine.Job) dockerEngine.Status {
 	}
 
 	job.Stdout.Write(jsonShip)
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func List(job *dockerEngine.Job) dockerEngine.Status {
+func List(job *engine.Job) engine.Status {
 	parameters := url.Values{}
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 
 	ships, err := configuration.Driver.List(parameters)
 	if err != nil {
@@ -45,10 +45,10 @@ func List(job *dockerEngine.Job) dockerEngine.Status {
 	}
 
 	job.Stdout.Write(jsonShip)
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func Decomission(job *dockerEngine.Job) dockerEngine.Status {
+func Decomission(job *engine.Job) engine.Status {
 	var name string
 	if len(job.Args) == 1 {
 		name = job.Args[0]
@@ -64,7 +64,7 @@ func Decomission(job *dockerEngine.Job) dockerEngine.Status {
 	parameters.Set("fqdn", fqdn)
 	parameters.Set("plan", plan)
 
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	id, err := configuration.Driver.Create(parameters)
 
 	if err != nil {
@@ -76,10 +76,10 @@ func Decomission(job *dockerEngine.Job) dockerEngine.Status {
 	newjob := job.Eng.Job("ssh_tunnel", fqdn, "true")
 	go newjob.Run()
 
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func Commission(job *dockerEngine.Job) dockerEngine.Status {
+func Commission(job *engine.Job) engine.Status {
 	var name string
 	if len(job.Args) == 1 {
 		name = job.Args[0]
@@ -95,7 +95,7 @@ func Commission(job *dockerEngine.Job) dockerEngine.Status {
 	parameters.Set("fqdn", fqdn)
 	parameters.Set("plan", plan)
 
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	id, err := configuration.Driver.Create(parameters)
 
 	if err != nil {
@@ -107,5 +107,5 @@ func Commission(job *dockerEngine.Job) dockerEngine.Status {
 	newjob := job.Eng.Job("ssh_tunnel", fqdn, "true")
 	go newjob.Run()
 
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }

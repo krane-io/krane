@@ -5,14 +5,14 @@ import (
 	"github.com/docker/docker/builtins"
 	dockerEngine "github.com/docker/docker/engine"
 	"github.com/krane-io/krane/api/server"
-	"github.com/krane-io/krane/config"
 	"github.com/krane-io/krane/ssh"
+	"github.com/krane-io/krane/types"
 	"log"
 	"net/url"
 	"strconv"
 )
 
-func InitializeDockerEngine(configuration config.KraneConfiguration) (eng *dockerEngine.Engine) {
+func InitializeDockerEngine(configuration types.KraneConfiguration) (eng *dockerEngine.Engine) {
 	eng = dockerEngine.New()
 
 	eng.Hack_SetGlobalVar("configuration", configuration)

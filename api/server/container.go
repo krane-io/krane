@@ -3,24 +3,22 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/docker/docker/engine"
+	"github.com/krane-io/krane/api/server/client"
+	"github.com/krane-io/krane/runconfig"
+	"github.com/krane-io/krane/types"
 	"net/url"
 	"strconv"
-
-	"github.com/krane-io/krane/api/server/client"
-	"github.com/krane-io/krane/config"
-	"github.com/krane-io/krane/runconfig"
-
-	dockerEngine "github.com/docker/docker/engine"
 )
 
-func Containers(job *dockerEngine.Job) dockerEngine.Status {
+func Containers(job *engine.Job) engine.Status {
 	ships := listContainers(job)
 	jsonShip, _ := json.Marshal(ships)
 	job.Stdout.Write(jsonShip)
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerStart(job *dockerEngine.Job) dockerEngine.Status {
+func ContainerStart(job *engine.Job) engine.Status {
 	hostConfig := runconfig.ContainerHostConfigFromJob(job)
 	if len(job.Args) != 1 {
 		return job.Errorf("Usage: %s CONTAINER\n", job.Name)
@@ -58,10 +56,10 @@ func ContainerStart(job *dockerEngine.Job) dockerEngine.Status {
 		return job.Errorf("No such container: %s\n", name)
 	}
 
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerStop(job *dockerEngine.Job) dockerEngine.Status {
+func ContainerStop(job *engine.Job) engine.Status {
 	if len(job.Args) != 1 {
 		return job.Errorf("Usage: %s CONTAINER\n", job.Name)
 	}
@@ -94,10 +92,10 @@ func ContainerStop(job *dockerEngine.Job) dockerEngine.Status {
 	} else {
 		return job.Errorf("No such container: %s\n", name)
 	}
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerAttach(job *dockerEngine.Job) dockerEngine.Status {
+func ContainerAttach(job *engine.Job) engine.Status {
 	// if len(job.Args) == 1 {
 	// 	containerValues.Set("name", job.Args[0])
 	// }
@@ -110,11 +108,11 @@ func ContainerAttach(job *dockerEngine.Job) dockerEngine.Status {
 	// 	stdout = job.GetenvBool("stdout")
 	// 	stderr = job.GetenvBool("stderr")
 	// )
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerCreate(job *dockerEngine.Job) dockerEngine.Status {
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+func ContainerCreate(job *engine.Job) engine.Status {
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	config := runconfig.ContainerConfigFromJob(job)
 
 	ship := configuration.GetShip(config.Ship)
@@ -143,7 +141,7 @@ func ContainerCreate(job *dockerEngine.Job) dockerEngine.Status {
 		return job.Errorf("Cannot create container: %s\n", err)
 	}
 
-	var runResult dockerEngine.Env
+	var runResult engine.Env
 
 	if err := runResult.Decode(stream); err != nil {
 		return job.Errorf("Error with container: %s\n", err)
@@ -155,10 +153,10 @@ func ContainerCreate(job *dockerEngine.Job) dockerEngine.Status {
 
 	job.Stdout.Write([]byte(runResult.Get("Id")))
 
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerRestart(job *dockerEngine.Job) dockerEngine.Status {
+func ContainerRestart(job *engine.Job) engine.Status {
 	if len(job.Args) != 1 {
 		return job.Errorf("Usage: %s CONTAINER\n", job.Name)
 	}
@@ -187,10 +185,10 @@ func ContainerRestart(job *dockerEngine.Job) dockerEngine.Status {
 	} else {
 		return job.Errorf("No such container: %s\n", name)
 	}
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerDelete(job *dockerEngine.Job) dockerEngine.Status {
+func ContainerDelete(job *engine.Job) engine.Status {
 	if len(job.Args) != 1 {
 		return job.Errorf("Not enough arguments. Usage: %s CONTAINER\n", job.Name)
 	}
@@ -231,10 +229,10 @@ func ContainerDelete(job *dockerEngine.Job) dockerEngine.Status {
 	} else {
 		return job.Errorf("No such container: %s\n", name)
 	}
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerPause(job *dockerEngine.Job) dockerEngine.Status {
+func ContainerPause(job *engine.Job) engine.Status {
 	if len(job.Args) != 1 {
 		return job.Errorf("Usage: %s CONTAINER", job.Name)
 	}
@@ -256,10 +254,10 @@ func ContainerPause(job *dockerEngine.Job) dockerEngine.Status {
 	} else {
 		return job.Errorf("No such container: %s\n", name)
 	}
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }
 
-func ContainerUnpause(job *dockerEngine.Job) dockerEngine.Status {
+func ContainerUnpause(job *engine.Job) engine.Status {
 	if len(job.Args) != 1 {
 		return job.Errorf("Usage: %s CONTAINER", job.Name)
 	}
@@ -281,5 +279,5 @@ func ContainerUnpause(job *dockerEngine.Job) dockerEngine.Status {
 	} else {
 		return job.Errorf("No such container: %s\n", name)
 	}
-	return dockerEngine.StatusOK
+	return engine.StatusOK
 }

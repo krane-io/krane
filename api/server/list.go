@@ -2,19 +2,15 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/docker/docker/engine"
+	"github.com/krane-io/krane/api/server/client"
+	"github.com/krane-io/krane/types"
 	"net/url"
 	"strconv"
-
-	dockerEngine "github.com/docker/docker/engine"
-
-	"github.com/krane-io/krane/api/server/client"
-
-	"fmt"
-	"github.com/krane-io/krane/config"
-	"github.com/krane-io/krane/types"
 )
 
-func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguration) <-chan *types.Ship {
+func listContainer(job *engine.Job, configuration types.KraneConfiguration) <-chan *types.Ship {
 	v := url.Values{}
 	if all := job.GetenvBool("all"); all {
 		v.Set("all", strconv.FormatBool(all))
@@ -51,8 +47,8 @@ func listContainer(job *dockerEngine.Job, configuration config.KraneConfiguratio
 	return ch
 }
 
-func listContainers(job *dockerEngine.Job) []*types.Ship {
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+func listContainers(job *engine.Job) []*types.Ship {
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	results := listContainer(job, configuration)
 	nShips := len(configuration.Production.Fleet)
 	ships := make([]*types.Ship, 0, nShips)

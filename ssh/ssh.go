@@ -3,14 +3,13 @@ package ssh
 import (
 	"code.google.com/p/go.crypto/ssh"
 	"fmt"
-	"github.com/krane-io/krane/config"
+	"github.com/docker/docker/engine"
+	"github.com/krane-io/krane/types"
 	"io"
 	"io/ioutil"
 	"net"
 	"os"
 	"time"
-
-	"github.com/docker/docker/engine"
 )
 
 func getPrivateKeys(job *engine.Job) ssh.Signer {
@@ -89,7 +88,7 @@ func Tunnel(job *engine.Job) engine.Status {
 		return job.Errorf("Usage: %s", job.Name)
 	}
 
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(config.KraneConfiguration)
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 
 	if delayed == "true" {
 		job.Logf("\nWe are going to waiting 30 seconds to create ssh tunnel with %s", fqdn)
