@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -73,7 +74,7 @@ func (client *Client) Create(parameters url.Values) (string, error) {
 			return "", err
 		}
 
-		return client.FindInstance(parameters.Get("name")).Id, nil
+		return client.FindShip(parameters.Get("name")).Id, nil
 	}
 
 }
@@ -106,6 +107,124 @@ func (client *Client) Plan(parameters url.Values) ([]types.Plan, error) {
 
 func (client *Client) Name() string {
 	return fmt.Sprintf("AWS driver")
+}
+
+func (client *Client) SearchTag(tags []ec2.Tag, key string) (value string) {
+	for _, tag := range tags {
+		if tag.Key == key {
+			return tag.Value
+		}
+	}
+	return ""
+}
+
+func (client *Client) FindShip(name string) types.Ship {
+	var ship types.Ship
+
+	filter := ec2.NewFilter()
+	filter.Add("tag-key", "docker")
+	filter.Add("tag:Name", name)
+
+	for _, region := range client.region {
+		response, _ := region.Instances(nil, filter)
+		for _, pool := range response.Reservations {
+			for _, instance := range pool.Instances {
+				ship = types.Ship{
+					instance.InstanceId,
+					client.SearchTag(instance.Tags, "Name"),
+					instance.DNSName,
+					instance.PublicIpAddress,
+					client.State(instance.State),
+					"Ubuntu 14.04",
+					instance.InstanceType,
+					27017,
+					"http",
+					0,
+					nil,
+					false,
+				}
+			}
+		}
+
+	}
+
+	return ship
+}
+
+func (client *Client) State(state ec2.InstanceState) (status string) {
+	if state.Code == 16 {
+		return "operational"
+	} else if state.Code == 32 {
+		return "shuting down"
+	} else if state.Code == 48 {
+		return "end"
+	} else {
+		return fmt.Sprintf("Unmapped for Code %d", state.Code)
+	}
+}
+func (client *Client) ListRegion(c chan []types.Ship, parameters url.Values, region *ec2.EC2) {
+	log.Infof("List Instances for Region %s", region.Name)
+	var final []types.Ship
+	filter := ec2.NewFilter()
+	filter.Add("tag-key", "docker")
+
+	resp, err := region.Instances(nil, filter)
+	if err != nil {
+		c <- final
+	}
+	for _, pool := range resp.Reservations {
+		for _, ship := range pool.Instances {
+			if client.State(ship.State) != "end" {
+				final = append(final, types.Ship{ship.InstanceId, client.SearchTag(ship.Tags, "Name"), ship.DNSName, ship.PublicIpAddress, client.State(ship.State), "Ubuntu 14.04", ship.InstanceType, 27017, "http", 0, nil, false})
+			}
+		}
+	}
+	c <- final
+}
+
+func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
+
+	c := make(chan []types.Ship, len(client.region))
+	var final []types.Ship
+
+	for _, value := range client.region {
+		go client.ListRegion(c, parameters, value)
+	}
+
+	for i := 1; i <= len(client.region); i++ {
+		final = append(final, <-c...)
+	}
+
+	return final, nil
+}
+
+func (client *Client) Stop(args map[string]string) error {
+	return nil
+}
+
+func (client *Client) Destroy(parameters url.Values) (string, error) {
+
+	id := make([]string, 1)
+	var err error
+
+	if client.ValidateId(parameters.Get("idOrName")) {
+		id[0] = parameters.Get("idOrName")
+	} else {
+		id[0] = client.FindShip(parameters.Get("idOrName")).Id
+	}
+
+	for _, region := range client.region {
+		_, err = region.TerminateInstances(id)
+		if err == nil {
+			return id[0], nil
+		}
+	}
+	return "", err
+}
+
+func (client *Client) ValidateId(text string) bool {
+	r, _ := regexp.Compile("^([a-z]-[0-9a-z]{8})$")
+	return r.MatchString(text)
 }
 
 func NewDriver() *Client {
@@ -369,117 +488,3 @@ func NewDriver() *Client {
 	}
 	return &newClient
 }
-
-func (client *Client) SearchTag(tags []ec2.Tag, key string) (value string) {
-	for _, tag := range tags {
-		if tag.Key == key {
-			return tag.Value
-		}
-	}
-	return ""
-}
-
-func (client *Client) FindInstance(name string) types.Ship {
-	var ship types.Ship
-
-	filter := ec2.NewFilter()
-	filter.Add("tag-key", "docker")
-	filter.Add("tag:Name", name)
-
-	for _, region := range client.region {
-		response, _ := region.Instances(nil, filter)
-		for _, pool := range response.Reservations {
-			for _, instance := range pool.Instances {
-				ship = types.Ship{
-					instance.InstanceId,
-					client.SearchTag(instance.Tags, "Name"),
-					instance.DNSName,
-					instance.PublicIpAddress,
-					client.State(instance.State),
-					"Ubuntu 14.04",
-					instance.InstanceType,
-					27017,
-					"http",
-					0,
-					nil,
-					false,
-				}
-			}
-		}
-
-	}
-
-	return ship
-}
-
-func (client *Client) State(state ec2.InstanceState) (status string) {
-	if state.Code == 16 {
-		return "operational"
-	} else if state.Code == 48 {
-		return "end"
-	} else {
-		return fmt.Sprintf("Unmapped for Code %d", state.Code)
-	}
-}
-func (client *Client) ListRegion(c chan []types.Ship, parameters url.Values, region *ec2.EC2) {
-	log.Infof("List Instances for Region %s", region.Name)
-	var final []types.Ship
-	filter := ec2.NewFilter()
-	filter.Add("tag-key", "docker")
-
-	resp, err := region.Instances(nil, filter)
-	if err != nil {
-		c <- final
-	}
-	for _, pool := range resp.Reservations {
-		for _, ship := range pool.Instances {
-			if client.State(ship.State) != "end" {
-				final = append(final, types.Ship{ship.InstanceId, client.SearchTag(ship.Tags, "Name"), ship.DNSName, ship.PublicIpAddress, client.State(ship.State), "Ubuntu 14.04", ship.InstanceType, 27017, "http", 0, nil, false})
-			}
-		}
-	}
-	c <- final
-}
-
-func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
-
-	c := make(chan []types.Ship, len(client.region))
-	var final []types.Ship
-
-	for _, value := range client.region {
-		go client.ListRegion(c, parameters, value)
-	}
-
-	for i := 1; i <= len(client.region); i++ {
-		final = append(final, <-c...)
-	}
-
-	return final, nil
-}
-
-func (client *Client) Stop(args map[string]string) error {
-	return nil
-}
-
-// func main() {
-
-// 	// start_krane_ship PUT    /krane/ships/:id/start(.:format)                                       api/krane/ships#start
-// 	//      krane_ships GET    /krane/ships(.:format)                                                 api/krane/ships#index
-// 	//     krane_clouds GET    /krane/clouds(.:format)
-// 	concerto := NewDriver()
-
-// 	parameters := url.Values{}
-// 	parameters.Set("name", "cadvisor6")
-// 	parameters.Set("fqdn", "cadvisor6.concerto.io")
-// 	parameters.Set("plan", "53f0f0ecd8a5975a1c0001a9")
-
-// 	// id, _ := concerto.Create(parameters)
-// 	// fmt.Printf("%s\n", id)
-// 	concerto.List(nil)
-// 	// concerto.GetCloudPlans()
-// 	// fmt.Printf("%#v", concerto.FindInstance("cadvisor5"))
-// 	//concerto.GetCloudPlans()
-// 	//concerto.StopShip("241a7c8e8d88"},
-// 	//concerto.StartShip("da33c245fdc3"},
-// 	// fmt.Printf("\n\n\n"},
-// }

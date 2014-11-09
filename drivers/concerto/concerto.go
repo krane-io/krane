@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -200,6 +201,27 @@ func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
 	}
 
 	return final, nil
+}
+
+func (client *Client) FindShip(name string) types.Ship {
+	var final types.Ship
+	ships, _ := client.List(nil)
+
+	for _, ship := range ships {
+		if ship.Name == name {
+			return ship
+		}
+	}
+	return final
+}
+
+func (client *Client) Destroy(parameters url.Values) (string, error) {
+	return "", nil
+}
+
+func (client *Client) ValidateId(text string) bool {
+	r, _ := regexp.Compile("^([0-9a-z]{24})$")
+	return r.MatchString(text)
 }
 
 func NewDriver() *Client {

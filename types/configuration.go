@@ -41,6 +41,17 @@ func (configuration *KraneConfiguration) UpdateShips(ships []Ship) error {
 	return nil
 }
 
+func GetShip(fleet []Ship, name string) Ship {
+	if len(fleet) > 0 {
+		for _, ship := range fleet {
+			if ship.Name == name || ship.Fqdn == name {
+				return ship
+			}
+		}
+	}
+	return Ship{}
+}
+
 func (configuration *KraneConfiguration) GetShip(name string) Ship {
 	if len(configuration.Production.Fleet) > 0 {
 		for _, ship := range configuration.Production.Fleet {

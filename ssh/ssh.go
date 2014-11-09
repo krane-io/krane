@@ -94,7 +94,10 @@ func Tunnel(job *engine.Job) engine.Status {
 		job.Logf("\nWe are going to waiting 30 seconds to create ssh tunnel with %s", fqdn)
 		time.Sleep(30 * time.Second)
 		ships, err := configuration.Driver.List(nil)
-		fmt.Printf("%#v", ships)
+		if types.GetShip(ships, fqdn).Id == "" {
+			job.Logf("Ship %s does not exist in cloud provider", fqdn)
+			return engine.StatusOK
+		}
 		if err != nil {
 			job.Logf("\nUnable to get list of ships from %s", configuration.Driver.Name())
 		}
