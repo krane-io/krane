@@ -70,7 +70,7 @@ Once you have done this, Krane will automatically use AWS tools to get your clou
     
 After doing this, you need to install chef-metal so that Krane can install Docker uniformly across multiple machines.
 
-    gem install chef-metal-fog chef-metal
+    gem install chef-metal-fog chef-metal chef
     
 ## Configuring Flexiant Concerto as your cloud driver
 
