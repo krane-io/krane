@@ -97,7 +97,11 @@ func Tunnel(job *engine.Job) engine.Status {
 		if types.GetShip(ships, fqdn).Id == "" {
 			job.Logf("Ship %s does not exist in cloud provider", fqdn)
 			return engine.StatusOK
+		} else if configuration.GetShip(fqdn).Id != "" {
+			job.Logf("Tunnel with Ship %s already exist", fqdn)
+			return engine.StatusOK
 		}
+
 		if err != nil {
 			job.Logf("\nUnable to get list of ships from %s", configuration.Driver.Name())
 		}

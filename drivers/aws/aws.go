@@ -17,6 +17,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -27,54 +28,66 @@ type Client struct {
 	cloud       types.Clouds
 }
 
+func (client *Client) Metal(accessKey string, secretKey string, plan string, name string) {
+	garbageOutput, _ := regexp.Compile("(\\[[0-9]*-[0-9]*-[0-9T:+]*] [a-zA-Z]*: )")
+
+	os.Setenv("AWS_ACCESS_KEY_ID", accessKey)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", secretKey)
+	os.Setenv("AWS_PLAN_ID", plan)
+	os.Setenv("AWS_MACHINE_NAME", name)
+	os.Setenv("AWS_KEY", "id_rsa")
+
+	_, filename, _, _ := runtime.Caller(0)
+
+	cmd := exec.Command("chef-client", "-z", path.Join(path.Dir(filename), "../../chef/aws.rb"))
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+	}
+
+	ls := bufio.NewReader(stdout)
+	err = cmd.Start()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+	}
+
+	x := 0
+
+	for {
+		line, isPrefix, err := ls.ReadLine()
+		if isPrefix {
+			log.Errorf("%s", errors.New("isPrefix: true"))
+		}
+		if err != nil {
+			if err != io.EOF {
+				log.Errorf("%s", err.Error())
+			}
+			break
+		}
+		x = x + 1
+		log.Infof("%s", garbageOutput.ReplaceAllString(string(line), ""))
+	}
+	err = cmd.Wait()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+	}
+}
+
 func (client *Client) Create(parameters url.Values) (string, error) {
 	// var inspect_json map[string]interface{}
 	if (parameters.Get("fqdn") == "") || (parameters.Get("name") == "") || (parameters.Get("plan") == "") {
 		return "", errors.New("Error missing parameters to execute create ship")
 	} else {
-
-		os.Setenv("AWS_ACCESS_KEY_ID", client.credentials.AccessKey)
-		os.Setenv("AWS_SECRET_ACCESS_KEY", client.credentials.SecretKey)
-		os.Setenv("AWS_PLAN_ID", parameters.Get("plan"))
-		os.Setenv("AWS_MACHINE_NAME", parameters.Get("name"))
-		os.Setenv("AWS_KEY", "id_rsa")
-
-		_, filename, _, _ := runtime.Caller(1)
-		cmd := exec.Command("chef-client", "-z", path.Join(path.Dir(filename), "../../chef/aws.rb"))
-
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			return "", err
+		go client.Metal(client.credentials.AccessKey, client.credentials.SecretKey, parameters.Get("plan"), parameters.Get("name"))
+		time.Sleep(3 * time.Second)
+		ship := client.FindShip(parameters.Get("name"))
+		fmt.Printf("\n\n%#v\n", ship)
+		if ship.Id == "" {
+			time.Sleep(9 * time.Second)
+			ship = client.FindShip(parameters.Get("name"))
 		}
-
-		ls := bufio.NewReader(stdout)
-		err = cmd.Start()
-		if err != nil {
-			return "", err
-		}
-
-		x := 0
-
-		for {
-			line, isPrefix, err := ls.ReadLine()
-			if isPrefix {
-				return "", errors.New("isPrefix: true")
-			}
-			if err != nil {
-				if err != io.EOF {
-					return "", err
-				}
-				break
-			}
-			x = x + 1
-			log.Infof("%d,%s", x, string(line))
-		}
-		err = cmd.Wait()
-		if err != nil {
-			return "", err
-		}
-
-		return client.FindShip(parameters.Get("name")).Id, nil
+		return ship.Id, nil
 	}
 
 }
