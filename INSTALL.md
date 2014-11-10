@@ -8,6 +8,10 @@ If you have any issues, please visit https://github.com/gpmgo/gopm for a more de
 
 ## Installation of Krane
 
+You'll need to either compile the code yourself, or download a precompiled version:
+
+### Compiling the code yourself
+
 First, download all the code:
 
     go get -u github.com/krane-io/krane
@@ -23,10 +27,15 @@ Then compile the project:
     
 Voilà, you should now have a Krane binary ready to use.
 
-### Mac
-In case you want to compile krane in Mac please execute the following command from the krane source page
+#### Changes needed for OS-X
+
+In case you want to compile krane on OS-X please execute the following command from the krane source page
 
     sed -i "s/Pdeathsig/\/\/Pdeathsig/g" ../../docker/docker/daemon/networkdriver/portmapper/proxy.go
+
+### Downloading the code
+
+You can download the code yourself from http://gobuild.io/github.com/krane-io/krane
 
 ## Configuration
 
