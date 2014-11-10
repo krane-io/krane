@@ -1,0 +1,17 @@
+author: "Javi Perez-Griffo <javi_at_flexiant.com>"
+description: ""
+filesets:
+  includes:
+  - README.md
+  - LICENSE
+  - conf
+  - static
+  - views
+  excludes:
+  - \.git
+  - .*\.go
+  depth: 3
+settings:
+  targetdir: ""
+  outfiles: []
+  build: test -d Godeps && go(){ godep go "$@";} ; sed -i "s/Pdeathsig/\/\/Pdeathsig/g" ../../docker/docker/daemon/networkdriver/portmapper/proxy.go; go install -v
