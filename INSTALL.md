@@ -51,12 +51,13 @@ Then create a configuration file called *config.yml*
 --- 
 production: 
   server: 
-    driver: concerto
-    host: 
-      fqdn: 127.0.0.1
-      name: localhost
-      port: 1979
-      schema: tcp
+    driver: concerto       # Krane daemon driver
+    host:                  
+      fqdn: 127.0.0.1      # Binding address for Krane daemon
+      name: localhost      # Krane daemon name
+      port: 1979           # Binding port for Krane daemon
+      schema: tcp          # Binding protocol for Krane daemon
+  ssl_profile: id_rsa      # Ssl profile to be used to communicate with ships
 ```
 ## Configuring AWS as your cloud driver
 
