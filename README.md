@@ -22,6 +22,11 @@ Where can I get the code? What licence is used?
 
 The code is on Github at https://github.com/krane-io/krane. It's written in Go, and is based on the existing Docker source code, so we've released it under the Apache 2.0 licence. We hope to get it merged into upstream Docker.
 
+Where can I download a binary of Krane?
+---
+
+Visit the following page http://gobuild.io/github.com/krane-io/krane to download a compiled version of Krane.
+
 Who is behind Krane?
 ---
 

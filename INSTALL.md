@@ -23,6 +23,11 @@ Then compile the project:
     
 Voilà, you should now have a Krane binary ready to use.
 
+### Mac
+In case you want to compile krane in Mac please execute the following command from the krane source page
+
+    sed -i "s/Pdeathsig/\/\/Pdeathsig/g" ../../docker/docker/daemon/networkdriver/portmapper/proxy.go
+
 ## Configuration
 
 First, create a folder in your home called *.krane*
