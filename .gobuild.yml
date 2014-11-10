@@ -3,6 +3,7 @@ description: ""
 filesets:
   includes:
   - README.md
+  - INSTALL.md
   - LICENSE
   - conf
   - static
