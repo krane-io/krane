@@ -57,7 +57,7 @@ production:
       name: localhost      # Krane daemon name
       port: 1979           # Binding port for Krane daemon
       schema: tcp          # Binding protocol for Krane daemon
-  ssl_profile: id_rsa      # Ssl profile to be used to communicate with ships
+  ssl_profile: default     # Ssl profile to be used to communicate with ships
 ```
 ## Configuring AWS as your cloud driver
 
