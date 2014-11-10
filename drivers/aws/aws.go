@@ -28,14 +28,14 @@ type Client struct {
 	cloud       types.Clouds
 }
 
-func (client *Client) Metal(accessKey string, secretKey string, plan string, name string) {
+func (client *Client) Metal(accessKey string, secretKey string, plan string, name string, ssl_profile string) {
 	garbageOutput, _ := regexp.Compile("(\\[[0-9]*-[0-9]*-[0-9T:+]*] [a-zA-Z]*: )")
 
 	os.Setenv("AWS_ACCESS_KEY_ID", accessKey)
 	os.Setenv("AWS_SECRET_ACCESS_KEY", secretKey)
 	os.Setenv("AWS_PLAN_ID", plan)
 	os.Setenv("AWS_MACHINE_NAME", name)
-	os.Setenv("AWS_KEY", "id_rsa")
+	os.Setenv("AWS_KEY", ssl_profile)
 
 	_, filename, _, _ := runtime.Caller(0)
 
@@ -79,7 +79,7 @@ func (client *Client) Create(parameters url.Values) (string, error) {
 	if (parameters.Get("fqdn") == "") || (parameters.Get("name") == "") || (parameters.Get("plan") == "") {
 		return "", errors.New("Error missing parameters to execute create ship")
 	} else {
-		go client.Metal(client.credentials.AccessKey, client.credentials.SecretKey, parameters.Get("plan"), parameters.Get("name"))
+		go client.Metal(client.credentials.AccessKey, client.credentials.SecretKey, parameters.Get("plan"), parameters.Get("name"), parameters.Get("ssh_profile"))
 		time.Sleep(3 * time.Second)
 		ship := client.FindShip(parameters.Get("name"))
 		fmt.Printf("\n\n%#v\n", ship)

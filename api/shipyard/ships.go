@@ -81,14 +81,14 @@ func Commission(job *engine.Job) engine.Status {
 	}
 
 	fqdn := job.Getenv("Fqdn")
-	plan := job.Getenv("Plan")
+	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 
 	parameters := url.Values{}
 	parameters.Set("name", name)
 	parameters.Set("fqdn", fqdn)
-	parameters.Set("plan", plan)
+	parameters.Set("plan", job.Getenv("Plan"))
+	parameters.Set("ssh_profile", configuration.Production.SshProfile)
 
-	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	id, err := configuration.Driver.Create(parameters)
 
 	if err != nil {

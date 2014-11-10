@@ -8,6 +8,7 @@ configuration['aws_machine_name'] 		= ENV['AWS_MACHINE_NAME']
 configuration['aws_plan_id'] 			= ENV['AWS_PLAN_ID']
 configuration['aws_access_key_id']		= ENV['AWS_ACCESS_KEY_ID']
 configuration['aws_secret_access_key']	= ENV['AWS_SECRET_ACCESS_KEY']
+configuration['aws_key']                = ENV['AWS_KEY']
 
 
 configuration.each do |key, value|
@@ -994,8 +995,8 @@ with_driver 'fog:AWS', :compute_options => {
 
 
 fog_key_pair 'id_rsa' do
-	private_key_path "#{File.expand_path('~')}/.ssh/id_rsa"
-	public_key_path "#{File.expand_path('~')}/.ssh/id_rsa.pub"
+	private_key_path "#{File.expand_path('~')}/.ssh/#{configuration['aws_key']}"
+	public_key_path "#{File.expand_path('~')}/.ssh/#{configuration['aws_key']}.pub"
 	allow_overwrite true
 end
 

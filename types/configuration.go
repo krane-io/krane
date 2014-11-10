@@ -20,8 +20,9 @@ type Enviroment struct {
 			Schema string
 		}
 	}
-	Fleet    []Ship
-	HighPort int
+	Fleet      []Ship
+	HighPort   int
+	SshProfile string `yaml:"ssl_profile"`
 }
 
 func (configuration *KraneConfiguration) UpdateShips(ships []Ship) error {
