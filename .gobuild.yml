@@ -8,6 +8,7 @@ filesets:
   - conf
   - static
   - views
+  - chef
   excludes:
   - \.git
   - .*\.go
