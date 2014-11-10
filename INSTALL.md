@@ -8,7 +8,9 @@ If you have any issues, please visit https://github.com/gpmgo/gopm for a more de
 
 ## Installation of Krane
 
-You'll need to either compile the code yourself, or download a precompiled version:
+You'll need to either:
+* compile the code yourself, or
+* download a precompiled version.
 
 ### Compiling the code yourself
 
