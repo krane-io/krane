@@ -8,6 +8,12 @@ If you have any issues, please visit https://github.com/gpmgo/gopm for a more de
 
 ## Installation of Krane
 
+You'll need to either:
+* compile the code yourself, or
+* download a precompiled version.
+
+### Compiling the code yourself
+
 First, download all the code:
 
     go get -u github.com/krane-io/krane
@@ -23,10 +29,15 @@ Then compile the project:
     
 Voilà, you should now have a Krane binary ready to use.
 
-### Mac
-In case you want to compile krane in Mac please execute the following command from the krane source page
+#### Changes needed for OS-X
+
+In case you want to compile krane on OS-X please execute the following command from the krane source page
 
     sed -i "s/Pdeathsig/\/\/Pdeathsig/g" ../../docker/docker/daemon/networkdriver/portmapper/proxy.go
+
+### Downloading the code
+
+You can download the code yourself from http://gobuild.io/github.com/krane-io/krane
 
 ## Configuration
 
@@ -40,12 +51,13 @@ Then create a configuration file called *config.yml*
 --- 
 production: 
   server: 
-    driver: concerto
-    host: 
-      fqdn: 127.0.0.1
-      name: localhost
-      port: 1979
-      schema: tcp
+    driver: concerto       # Krane daemon driver
+    host:                  
+      fqdn: 127.0.0.1      # Binding address for Krane daemon
+      name: localhost      # Krane daemon name
+      port: 1979           # Binding port for Krane daemon
+      schema: tcp          # Binding protocol for Krane daemon
+  ssl_profile: default     # Ssl profile to be used to communicate with ships
 ```
 ## Configuring AWS as your cloud driver
 
@@ -59,7 +71,7 @@ Once you have done this, Krane will automatically use AWS tools to get your clou
     
 After doing this, you need to install chef-metal so that Krane can install Docker uniformly across multiple machines.
 
-    gem install chef-metal-fog chef-metal
+    gem install chef-metal-fog chef-metal chef
     
 ## Configuring Flexiant Concerto as your cloud driver
 
