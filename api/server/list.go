@@ -16,8 +16,8 @@ func listContainer(job *engine.Job, configuration types.KraneConfiguration) <-ch
 		v.Set("all", strconv.FormatBool(all))
 	}
 
-	ch := make(chan *types.Ship, len(configuration.Production.Fleet))
-	for _, ship := range configuration.Production.Fleet {
+	ch := make(chan *types.Ship, len(configuration.Production.Fleet.Ships()))
+	for _, ship := range configuration.Production.Fleet.Available() {
 		go func(ship types.Ship) {
 
 			cli := client.NewKraneClientApi(ship, false, job)
@@ -50,7 +50,7 @@ func listContainer(job *engine.Job, configuration types.KraneConfiguration) <-ch
 func listContainers(job *engine.Job) []*types.Ship {
 	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	results := listContainer(job, configuration)
-	nShips := len(configuration.Production.Fleet)
+	nShips := len(configuration.Production.Fleet.Available())
 	ships := make([]*types.Ship, 0, nShips)
 	for i := 0; i < nShips; i++ {
 		result := <-results

@@ -195,7 +195,7 @@ func (client *Client) ListRegion(c chan []types.Ship, parameters url.Values, reg
 	c <- final
 }
 
-func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
+func (client *Client) List(parameters url.Values) (types.Fleet, error) {
 
 	c := make(chan []types.Ship, len(client.region))
 	var final []types.Ship
@@ -208,7 +208,8 @@ func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
 		final = append(final, <-c...)
 	}
 
-	return final, nil
+	fmt.Printf("\n%#v\n", final)
+	return types.NewFleet(final), nil
 }
 
 func (client *Client) Stop(args map[string]string) error {

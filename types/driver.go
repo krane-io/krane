@@ -5,7 +5,7 @@ import (
 )
 
 type Driver interface {
-	List(parameters url.Values) ([]Ship, error)
+	List(parameters url.Values) (Fleet, error)
 	Plan(parameters url.Values) ([]Plan, error)
 	Create(parameters url.Values) (string, error)
 	Destroy(parameters url.Values) (string, error)

@@ -13,7 +13,7 @@ func shipWithContainerId(job *engine.Job, id string) *types.Ship {
 			for _, container := range ship.Containers {
 				if strings.HasPrefix(container.ID, id) {
 					configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
-					for _, shipClean := range configuration.Production.Fleet {
+					for _, shipClean := range configuration.Production.Fleet.Ships() {
 						if string(shipClean.Fqdn) == string(ship.Fqdn) {
 							return &shipClean
 						}

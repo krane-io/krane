@@ -32,15 +32,15 @@ func InitializeDockerEngine(configuration types.KraneConfiguration) (eng *docker
 
 	parameters := url.Values{}
 
-	ships, err := configuration.Driver.List(parameters)
+	fleet, err := configuration.Driver.List(parameters)
 	if err != nil {
 		log.Fatalf("unable to get list of ships from %s", configuration.Driver.Name())
 	}
 
-	configuration.UpdateShips(ships)
+	configuration.Production.Fleet.Append(fleet.Ships())
 	eng.Hack_SetGlobalVar("configuration", configuration)
 
-	for _, ship := range configuration.Production.Fleet {
+	for _, ship := range configuration.Production.Fleet.Ships() {
 		fmt.Printf("We are going to queue %s\n", ship.Fqdn)
 		ssh_job := eng.Job("ssh_tunnel", ship.Fqdn, "false")
 		ssh_job.Run()

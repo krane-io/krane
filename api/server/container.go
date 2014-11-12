@@ -115,7 +115,7 @@ func ContainerCreate(job *engine.Job) engine.Status {
 	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	config := runconfig.ContainerConfigFromJob(job)
 
-	ship := configuration.GetShip(config.Ship)
+	ship := configuration.Production.Fleet.Find(config.Ship)
 
 	if len(job.Args) != 1 || ship.Fqdn == "" {
 		return job.Errorf("Usage: %s CONTAINER\n", job.Name)

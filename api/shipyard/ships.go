@@ -34,12 +34,12 @@ func List(job *engine.Job) engine.Status {
 	parameters := url.Values{}
 	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 
-	ships, err := configuration.Driver.List(parameters)
+	fleet, err := configuration.Driver.List(parameters)
 	if err != nil {
 		job.Errorf("unable to get list of ships from %s", configuration.Driver.Name())
 	}
 
-	jsonShip, err := json.Marshal(ships)
+	jsonShip, err := json.Marshal(fleet.Ships())
 	if err != nil {
 		job.Errorf("unable to marshal to json ship response")
 	}

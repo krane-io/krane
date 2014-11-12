@@ -182,37 +182,30 @@ func (client *Client) Plan(parameters url.Values) ([]types.Plan, error) {
 	}
 }
 
-func (client *Client) List(parameters url.Values) ([]types.Ship, error) {
+func (client *Client) List(parameters url.Values) (types.Fleet, error) {
 	output := client.Get(client.endpoint + "/krane/ships")
 
-	var fleet types.Fleet
-	json.Unmarshal(output, &fleet)
+	var jsonShips types.Ships
+	json.Unmarshal(output, &jsonShips)
 
 	var final []types.Ship
 
 	if parameters.Get("state") != "" {
-		for _, ship := range fleet.Ships {
+		for _, ship := range jsonShips.Ships {
 			if parameters.Get("state") == ship.State {
 				final = append(final, ship)
 			}
 		}
 	} else {
-		final = fleet.Ships
+		final = jsonShips.Ships
 	}
 
-	return final, nil
+	return types.NewFleet(final), nil
 }
 
 func (client *Client) FindShip(name string) types.Ship {
-	var final types.Ship
-	ships, _ := client.List(nil)
-
-	for _, ship := range ships {
-		if ship.Name == name {
-			return ship
-		}
-	}
-	return final
+	fleet, _ := client.List(nil)
+	return fleet.Find(name)
 }
 
 func (client *Client) Destroy(parameters url.Values) (string, error) {

@@ -1,6 +1,6 @@
 package types
 
-type Fleet struct {
+type Ships struct {
 	Ships []Ship
 }
 
