@@ -19,6 +19,14 @@ type Ship struct {
 	Touched    bool
 }
 
+func (ship *Ship) IsNil() bool {
+	if ship.Id == "" {
+		return true
+	} else {
+		return false
+	}
+}
+
 type Port struct {
 	PrivatePort int64
 	PublicPort  int64

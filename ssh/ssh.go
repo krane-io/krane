@@ -81,6 +81,7 @@ func portMapping(job *engine.Job, remoteHost string, localPort int, remotePort i
 func Tunnel(job *engine.Job) engine.Status {
 	var fqdn string
 	var delayed string
+
 	if len(job.Args) == 2 {
 		fqdn = job.Args[0]
 		delayed = job.Args[1]
@@ -94,10 +95,11 @@ func Tunnel(job *engine.Job) engine.Status {
 		job.Logf("\nWe are going to waiting 30 seconds to create ssh tunnel with %s", fqdn)
 		time.Sleep(30 * time.Second)
 		fleet, err := configuration.Driver.List(nil)
+		production := configuration.Production.Fleet.Find(fqdn)
 		if fleet.Find(fqdn).Id == "" {
 			job.Logf("Ship %s does not exist in cloud provider", fqdn)
 			return engine.StatusOK
-		} else if configuration.Production.Fleet.Find(fqdn).Id != "" {
+		} else if production.Id != "" && production.LocalPort > 0 {
 			job.Logf("Tunnel with Ship %s already exist", fqdn)
 			return engine.StatusOK
 		}
@@ -123,7 +125,6 @@ func Tunnel(job *engine.Job) engine.Status {
 		ship.LocalPort = configuration.Production.HighPort
 		configuration.Production.Fleet.AppendShip(ship)
 		job.Eng.Hack_SetGlobalVar("configuration", configuration)
-		fmt.Printf("%#v", configuration.Production.Fleet)
 		go portMapping(job, ship.Fqdn, ship.LocalPort, ship.Port)
 		return engine.StatusOK
 
