@@ -211,10 +211,15 @@ func (cli *KraneCli) pullImageCustomOut(image string, out io.Writer) error {
 	return nil
 }
 
-func (cli *KraneCli) createContainer(config *runconfig.Config, hostConfig *runconfig.HostConfig, cidfile, name string) (engine.Env, error) {
+// TODO: Krane clean up because i needed to add Ship to String
+func (cli *KraneCli) createContainer(config *runconfig.Config, hostConfig *runconfig.HostConfig, cidfile, name string, ship string) (engine.Env, error) {
 	containerValues := url.Values{}
 	if name != "" {
 		containerValues.Set("name", name)
+	}
+
+	if ship != "" {
+		containerValues.Set("ship", ship)
 	}
 
 	mergedConfig := runconfig.MergeConfigs(config, hostConfig)

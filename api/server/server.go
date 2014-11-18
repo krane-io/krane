@@ -1,6 +1,8 @@
 package server
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/docker/docker/engine"
 	"github.com/docker/docker/pkg/version"
@@ -58,7 +60,7 @@ var ServerRoutes = map[string]map[string]HttpApiFunc{
 		"/images/load":                  GetCatchAll,
 		"/images/{name:.*}/push":        GetCatchAll,
 		"/images/{name:.*}/tag":         GetCatchAll,
-		"/containers/create":            postContainersCreate,
+		"/containers/create":            PostContainersCreate,
 		"/ships/create":                 PostShipsCreate,
 		"/containers/{name:.*}/kill":    GetCatchAll,
 		"/containers/{name:.*}/pause":   GetCatchAll,
@@ -84,6 +86,43 @@ var ServerRoutes = map[string]map[string]HttpApiFunc{
 func GetCatchAll(eng *engine.Engine, version version.Version, w http.ResponseWriter, r *http.Request, vars map[string]string) error {
 	fmt.Printf("%#v", r)
 	return nil
+}
+
+func PostContainersCreate(eng *engine.Engine, version version.Version, w http.ResponseWriter, r *http.Request, vars map[string]string) error {
+	if err := parseForm(r); err != nil {
+		return nil
+	}
+	var (
+		out          engine.Env
+		job          = eng.Job("create", r.Form.Get("name"), r.Form.Get("ship"))
+		outWarnings  []string
+		stdoutBuffer = bytes.NewBuffer(nil)
+		warnings     = bytes.NewBuffer(nil)
+	)
+
+	if err := checkForJson(r); err != nil {
+		return err
+	}
+
+	if err := job.DecodeEnv(r.Body); err != nil {
+		return err
+	}
+	// Read container ID from the first line of stdout
+	job.Stdout.Add(stdoutBuffer)
+	// Read warnings from stderr
+	job.Stderr.Add(warnings)
+	if err := job.Run(); err != nil {
+		return err
+	}
+	// Parse warnings from stderr
+	scanner := bufio.NewScanner(warnings)
+	for scanner.Scan() {
+		outWarnings = append(outWarnings, scanner.Text())
+	}
+	out.Set("Id", engine.Tail(stdoutBuffer, 1))
+	out.SetList("Warnings", outWarnings)
+
+	return writeJSON(w, http.StatusCreated, out)
 }
 
 func DeleteShips(eng *engine.Engine, version version.Version, w http.ResponseWriter, r *http.Request, vars map[string]string) error {

@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/engine"
+	"github.com/docker/docker/runconfig"
 	"github.com/krane-io/krane/api/server/client"
-	"github.com/krane-io/krane/runconfig"
 	"github.com/krane-io/krane/types"
 	"net/url"
 	"strconv"
@@ -115,11 +115,11 @@ func ContainerCreate(job *engine.Job) engine.Status {
 	configuration := job.Eng.Hack_GetGlobalVar("configuration").(types.KraneConfiguration)
 	config := runconfig.ContainerConfigFromJob(job)
 
-	ship := configuration.Production.Fleet.Find(config.Ship)
-
-	if len(job.Args) != 1 || ship.Fqdn == "" {
+	if len(job.Args) != 2 {
 		return job.Errorf("Usage: %s CONTAINER\n", job.Name)
 	}
+
+	ship := configuration.Production.Fleet.Find(job.Args[1])
 
 	containerValues := url.Values{}
 	containerValues.Set("name", job.Args[0])

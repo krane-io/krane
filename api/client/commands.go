@@ -134,7 +134,7 @@ func (cli *KraneCli) CmdRun(args ...string) error {
 		sigProxy = false
 	}
 
-	runResult, err := cli.createContainer(config, hostConfig, hostConfig.ContainerIDFile, *flName)
+	runResult, err := cli.createContainer(config, hostConfig, hostConfig.ContainerIDFile, *flName, *flShip)
 	if err != nil {
 		return err
 	}
