@@ -1,5 +1,6 @@
 
-#Krane [![Gobuild Download](http://gobuild.io/badge/github.com/krane-io/krane/downloads.svg)](http://gobuild.io/github.com/krane-io/krane)
+#Krane 
+
 What is Krane?
 ---
 
